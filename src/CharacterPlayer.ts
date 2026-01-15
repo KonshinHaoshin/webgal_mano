@@ -19,7 +19,8 @@ export class CharacterPlayer extends PIXI.Container {
 
   private initLayers() {
     this.model.assets.layers.forEach(layerInfo => {
-      const texture = PIXI.Texture.from(layerInfo.path);
+      // 这里的 ID 必须与加载器加载资源时指定的 ID (或 URL) 一致
+      const texture = PIXI.Texture.from(layerInfo.id);
       const sprite = new PIXI.Sprite(texture);
       
       sprite.zIndex = layerInfo.order;
