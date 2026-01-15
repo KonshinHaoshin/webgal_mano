@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>webgal_mano 示例</title>
+    <style>
+        body { margin: 0; background: #222; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+        canvas { border: 1px solid #444; margin-top: 20px; }
+        .controls { margin: 20px; display: flex; gap: 10px; }
+        button { padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>webgal_mano 渲染演示</h1>
+    <div class="controls" id="controls">
+        <!-- 按钮将由 JS 动态生成 -->
+    </div>
+    
+    <!-- 这里通常通过构建工具引入编译后的 JS -->
+    <script type="module" src="./usage.ts"></script>
+</body>
+</html>
+
