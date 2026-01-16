@@ -30,13 +30,30 @@ async function initExample() {
   }
   const modelData = await response.json();
 
-  // 1. 加载所有图片资源
+  // 1. 获取基础路径 (优先使用 modelData.settings.basePath)
+  // 如果 basePath 是 ./，则相对于 model.char.json 的路径
+  let basePath = modelData.settings.basePath || './';
+  if (basePath === './') {
+    basePath = '/assets/Sherry/';
+  }
+
+  // 2. 加载所有图片资源
   modelData.assets.layers.forEach((layer: any) => {
-    app.loader.add(layer.id, '/assets/Sherry/' + layer.path);
+    // 确保 url 是正确的
+    const url = basePath.endsWith('/') ? basePath + layer.path : basePath + '/' + layer.path;
+    app.loader.add(layer.id, url);
   });
 
   app.loader.load(() => {
-    const player = new CharacterPlayer(modelData);
+    // 提取所有纹理，传递给 CharacterPlayer
+    const textures: Record<string, PIXI.Texture> = {};
+    modelData.assets.layers.forEach((layer: any) => {
+      if (app.loader.resources[layer.id]?.texture) {
+        textures[layer.id] = app.loader.resources[layer.id].texture!;
+      }
+    });
+
+    const player = new CharacterPlayer(modelData, textures);
     player.x = 400; // 居中
     player.y = 1000; // 底部
     player.pivot.set(512, 2048); // 设置原点在底部中心
@@ -183,8 +200,8 @@ async function initExample() {
           
           btn.onclick = () => {
             // 切换逻辑
-            const isVisible = btn.style.backgroundColor === 'rgb(0, 123, 255)'; // #007bff
-            player.setLayerVisible(layer.id, !isVisible);
+            const isCurrentlyVisible = player.isLayerVisible(layer.id);
+            player.setLayerVisible(layer.id, !isCurrentlyVisible);
             updateButtonStates();
           };
           btnContainer.appendChild(btn);
@@ -196,15 +213,21 @@ async function initExample() {
 
       // 更新按钮状态的辅助函数
       const updateButtonStates = () => {
-        // 更新姿势按钮状态 (如果想做更复杂的，可以检查 activePoses)
-        // 这里简单处理：点击哪个姿势哪个就变亮，或者每次 update 后获取当前状态
-        // 实际上由于叠层关系，很多姿势可能同时活跃，这里暂不处理高亮，仅保证功能
+        // 更新图层按钮状态
+        const layerBtns = document.querySelectorAll('.layer-btn');
+        layerBtns.forEach((btn: any) => {
+          const id = btn.dataset.id;
+          const isVisible = player.isLayerVisible(id);
+          btn.style.backgroundColor = isVisible ? '#007bff' : '#444';
+          btn.style.borderColor = isVisible ? '#0056b3' : '#555';
+        });
       };
 
       updateButtonStates();
     }
 
     player.resetToDefault();
+    updateButtonStates();
   });
 }
 

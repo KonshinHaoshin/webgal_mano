@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { CharacterModel } from './types';
-import { resolvePose, calculateStates } from './Parser';
+import { resolvePose, calculateStates, resolveLayerUrl } from './Parser';
 
 export class CharacterPlayer extends PIXI.Container {
   private model: CharacterModel;
@@ -9,18 +9,29 @@ export class CharacterPlayer extends PIXI.Container {
   // 新增：手动覆盖状态，模拟编辑器的“差分细节调整”
   private manualOverrides: Record<string, boolean> = {};
 
-  constructor(model: CharacterModel) {
+  constructor(model: CharacterModel, textures?: Record<string, PIXI.Texture>) {
     super();
     this.model = model;
     this.sortableChildren = true;
-    this.initLayers();
+    this.initLayers(textures);
     this.resetToDefault();
   }
 
-  private initLayers() {
+  private initLayers(textures?: Record<string, PIXI.Texture>) {
     this.model.assets.layers.forEach(layerInfo => {
-      // 这里的 ID 必须与加载器加载资源时指定的 ID (或 URL) 一致
-      const texture = PIXI.Texture.from(layerInfo.id);
+      let texture: PIXI.Texture | undefined;
+      const url = resolveLayerUrl(this.model, layerInfo.id);
+
+      if (textures) {
+        // 尝试通过 ID 获取，或者通过完整的 URL 获取
+        texture = textures[layerInfo.id] || textures[url];
+      }
+
+      if (!texture) {
+        // 如果没有预加载的纹理，尝试从缓存或直接加载 URL
+        texture = PIXI.Texture.from(url);
+      }
+
       const sprite = new PIXI.Sprite(texture);
       
       sprite.zIndex = layerInfo.order;
@@ -167,6 +178,13 @@ export class CharacterPlayer extends PIXI.Container {
     if (this.sortChildren) {
       this.sortChildren();
     }
+  }
+
+  /**
+   * 获取图层当前的显隐状态
+   */
+  public isLayerVisible(layerId: string): boolean {
+    return !!this.layerSprites.get(layerId)?.visible;
   }
 
   public destroy(options?: any) {

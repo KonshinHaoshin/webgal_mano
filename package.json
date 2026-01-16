@@ -1,6 +1,6 @@
 {
   "name": "webgal_mano",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Layered character player for WebGAL and PIXI.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
